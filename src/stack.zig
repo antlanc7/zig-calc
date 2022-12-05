@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn Stack(comptime Child : type) type {
+pub fn Stack(comptime Child: type) type {
     return struct {
         const This = @This();
         const Node = struct {
@@ -19,7 +19,7 @@ pub fn Stack(comptime Child : type) type {
 
         pub fn push(this: *This, value: Child) !void {
             const node = try this.gpa.create(Node);
-            node.* = .{ .data = value, .next = this.top};
+            node.* = .{ .data = value, .next = this.top };
             this.top = node;
         }
 
