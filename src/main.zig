@@ -11,10 +11,9 @@ pub fn main() !void {
 
     var calculator = Calculator(f32).init(allocator);
 
-    print("Enter the expression to evaluate:", .{});
+    print("Enter the expression to evaluate: ", .{});
     const line = try stdin.readUntilDelimiterOrEofAlloc(allocator, '\n', std.math.maxInt(usize)) orelse return error.EmptyStream;
-    print("{s}", .{line});
 
     const result = try calculator.eval(line);
-    print("The result is {d}", .{result});
+    print("The result is {d:.2}\n", .{result});
 }
