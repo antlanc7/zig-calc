@@ -24,17 +24,18 @@ pub fn Calculator(comptime Number: type) type {
                         '+' => op1 + op2,
                         '-' => op1 - op2,
                         '*' => op1 * op2,
-                        '/' => if (comptime std.meta.trait.isSignedInt(Number)) @divTrunc(op1, op2) else op1 / op2,
+                        '/' => switch (@typeInfo(Number)) {
+                            .Float, .ComptimeFloat => op1 / op2,
+                            else => @divTrunc(op1, op2),
+                        },
                         else => unreachable,
                     };
                     try self.stack.push(result);
                 } else {
-                    var val: Number = undefined;
-                    if (comptime std.meta.trait.isFloat(Number)) {
-                        val = std.fmt.parseFloat(Number, tok) catch continue;
-                    } else {
-                        val = std.fmt.parseInt(Number, tok) catch continue;
-                    }
+                    const val: Number = switch (@typeInfo(Number)) {
+                        .Float, .ComptimeFloat => std.fmt.parseFloat(Number, tok) catch continue,
+                        else => std.fmt.parseInt(Number, tok, 10) catch continue,
+                    };
                     try self.stack.push(val);
                 }
             }
