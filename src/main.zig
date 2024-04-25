@@ -11,9 +11,18 @@ pub fn main() !void {
 
     var calculator = Calculator(f32).init(allocator);
 
-    print("Enter the expression to evaluate: ", .{});
-    const line = try stdin.readUntilDelimiterOrEofAlloc(allocator, '\n', std.math.maxInt(usize)) orelse return error.EmptyStream;
+    while (true) {
+        print("Enter the expression to evaluate: ", .{});
+        const line = try stdin.readUntilDelimiterOrEofAlloc(allocator, '\n', std.math.maxInt(usize)) orelse return error.EmptyStream;
+        defer allocator.free(line);
+        const strippedLine = std.mem.trimRight(u8, line, "\r");
+        if (strippedLine.len == 0) continue;
+        if (std.mem.startsWith(u8, strippedLine, "exit")) break;
 
-    const result = try calculator.eval(line);
-    print("The result is {d:.2}\n", .{result});
+        if (calculator.eval(strippedLine)) |result| {
+            print("The result is {d:.2}\n", .{result});
+        } else |_| {
+            print("Invalid expression\n", .{});
+        }
+    }
 }
