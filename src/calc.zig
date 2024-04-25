@@ -14,13 +14,22 @@ pub fn Calculator(comptime Number: type) type {
             return Self{ .stack = Stack(Number).init(allocator) };
         }
 
+        fn defaultOperand(operation: u8) !Number {
+            return switch (operation) {
+                '+', '-' => 0,
+                '*', '/' => 1,
+                else => error.InvalidOperation,
+            };
+        }
+
         pub fn eval(self: *Self, line: []const u8) !Number {
             var tokens = std.mem.tokenize(u8, line, &std.ascii.whitespace);
             while (tokens.next()) |tok| {
                 if (tok.len == 1 and std.mem.indexOfScalar(u8, "+-*/", tok[0]) != null) {
-                    const op2 = try self.stack.pop();
-                    const op1 = try self.stack.pop();
-                    const result = switch (tok[0]) {
+                    const operator = tok[0];
+                    const op2 = self.stack.pop() catch defaultOperand(operator) catch unreachable;
+                    const op1 = self.stack.pop() catch defaultOperand(operator) catch unreachable;
+                    const result = switch (operator) {
                         '+' => op1 + op2,
                         '-' => op1 - op2,
                         '*' => op1 * op2,
@@ -44,12 +53,31 @@ pub fn Calculator(comptime Number: type) type {
     };
 }
 
+test "default_operand" {
+    var calculator = Calculator(i32).init(std.testing.allocator);
+    try std.testing.expectEqual(calculator.eval("+"), 0);
+    try std.testing.expectEqual(calculator.eval("-"), 0);
+    try std.testing.expectEqual(calculator.eval("*"), 1);
+    try std.testing.expectEqual(calculator.eval("/"), 1);
+    try std.testing.expectEqual(calculator.eval("+"), 0);
+    try std.testing.expectEqual(calculator.eval("23 +"), 23);
+    try std.testing.expectEqual(calculator.eval("4 /"), 0);
+}
+
 test "calculator_int" {
     var calculator = Calculator(i32).init(std.testing.allocator);
     try std.testing.expectEqual(calculator.eval("23 7 +"), 30);
+    try std.testing.expectEqual(calculator.eval("23 7 -"), 16);
 }
 
 test "calculator_float" {
     var calculator = Calculator(f32).init(std.testing.allocator);
     try std.testing.expectEqual(calculator.eval("23 7 +"), 30);
+    try std.testing.expectEqual(calculator.eval("23.5 7.7 +"), 31.2);
+}
+
+test "calculator_double" {
+    var calculator = Calculator(f64).init(std.testing.allocator);
+    try std.testing.expectEqual(calculator.eval("23 7 +"), 30);
+    try std.testing.expectEqual(calculator.eval("23.5 7.7 +"), 31.2);
 }
