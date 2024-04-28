@@ -1,5 +1,6 @@
 const std = @import("std");
 const Calculator = @import("calc.zig").Calculator;
+const Rational = @import("rational.zig").Rational(isize);
 const print = std.debug.print;
 
 pub fn main() !void {
@@ -9,7 +10,7 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var calculator = Calculator(f32).init(allocator);
+    var calculator = Calculator(Rational).init(allocator);
 
     while (true) {
         print("Enter the expression to evaluate: ", .{});
@@ -20,7 +21,7 @@ pub fn main() !void {
         if (std.mem.startsWith(u8, strippedLine, "exit")) break;
 
         if (calculator.eval(strippedLine)) |result| {
-            print("The result is {d:.2}\n", .{result});
+            print("The result is {}\n", .{result});
         } else |_| {
             print("Invalid expression\n", .{});
         }
