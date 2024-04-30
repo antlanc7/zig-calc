@@ -10,6 +10,7 @@ pub fn build(b: *std.Build) void {
             .root_source_file = .{ .path = "src/main.zig" },
             .optimize = optimize,
             .target = target,
+            .single_threaded = true,
         },
     );
     b.installArtifact(exe);
