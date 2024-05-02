@@ -52,9 +52,9 @@ pub fn Calculator(comptime Number: type) type {
                     };
                     try self.stack.push(result);
                 } else {
-                    const val: Number = if (isUnderlyingRational) Number.parse(tok) catch continue else switch (@typeInfo(Number)) {
-                        .Float, .ComptimeFloat => std.fmt.parseFloat(Number, tok) catch continue,
-                        else => std.fmt.parseInt(Number, tok, 10) catch continue,
+                    const val: Number = if (isUnderlyingRational) try Number.parse(tok) else switch (@typeInfo(Number)) {
+                        .Float, .ComptimeFloat => try std.fmt.parseFloat(Number, tok),
+                        else => try std.fmt.parseInt(Number, tok, 10),
                     };
                     try self.stack.push(val);
                 }

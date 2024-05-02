@@ -90,7 +90,7 @@ pub fn Rational(comptime Underlying: type) type {
             if (value.den == 1) {
                 try std.fmt.format(writer, "{d}", .{value.num});
             } else {
-                try std.fmt.format(writer, "{d}/{d} = {d:.2}", .{ value.num, value.den, value.toFloat(f64) });
+                try std.fmt.format(writer, "{}/{} ≈ {d}", .{ value.num, value.den, value.toFloat(f64) });
             }
         }
     };
