@@ -10,6 +10,8 @@ pub fn Rational(comptime Underlying: type) type {
         den: Underlying,
         const This = @This();
 
+        const UnderlyingUnsigned = std.meta.Int(.unsigned, @typeInfo(Underlying).Int.bits);
+
         pub fn init(num: Underlying, den: Underlying) This {
             std.debug.assert(den != 0);
 
@@ -57,6 +59,7 @@ pub fn Rational(comptime Underlying: type) type {
             const absNum = @abs(this.num);
             const absDen = @abs(this.den);
             const gcd = std.math.gcd(absNum, absDen);
+            if (this.den > 0 and gcd == 1) return this.*;
             const sign: Underlying = if ((this.num >= 0) == (this.den > 0)) 1 else -1;
             return .{
                 .num = sign * @as(Underlying, @intCast(absNum / gcd)),
@@ -84,13 +87,28 @@ pub fn Rational(comptime Underlying: type) type {
             return @as(T, @floatFromInt(this.num)) / @as(T, @floatFromInt(this.den));
         }
 
+        pub fn isPeriodic(this: *const This) bool {
+            std.debug.assert(this.den > 0);
+            var den: UnderlyingUnsigned = @intCast(this.den);
+
+            // remove every "2" factor from denominator
+            den >>= @intCast(@ctz(den));
+
+            // remove every "5" factor from denominator
+            while (den > 1 and den % 5 == 0) {
+                den = @divExact(den, 5);
+            }
+            return den != 1;
+        }
+
         pub fn format(value: This, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
             _ = fmt;
             _ = options;
             if (value.den == 1) {
                 try std.fmt.format(writer, "{d}", .{value.num});
             } else {
-                try std.fmt.format(writer, "{}/{} ≈ {d}", .{ value.num, value.den, value.toFloat(f64) });
+                const equalSign = if (value.isPeriodic()) "≈" else "=";
+                try std.fmt.format(writer, "{}/{} {s} {d}", .{ value.num, value.den, equalSign, value.toFloat(f64) });
             }
         }
     };
@@ -124,6 +142,13 @@ test "rational numbers" {
     try std.testing.expectEqual(RationalInt.parse("3.14"), RationalInt{ .num = 157, .den = 50 });
 
     try std.testing.expectEqual(RationalInt.parse("1.0000000000000000000000000000000000001"), RationalInt{ .num = 10000000000000000000000000000000000001, .den = 10000000000000000000000000000000000000 });
+}
+
+test "isPeriodic" {
+    const RationalInt = Rational(isize);
+    try std.testing.expectEqual((RationalInt.parse("4/9") catch unreachable).isPeriodic(), true);
+    try std.testing.expectEqual((RationalInt.parse("4/8") catch unreachable).isPeriodic(), false);
+    try std.testing.expectEqual((RationalInt.parse("4/7") catch unreachable).isPeriodic(), true);
 }
 
 test "rational fractions" {
