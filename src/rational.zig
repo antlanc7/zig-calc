@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn Rational(comptime Underlying: type) type {
-    if (@typeInfo(Underlying) != .Int or @typeInfo(Underlying).Int.signedness != .signed) {
+    if (@typeInfo(Underlying) != .int or @typeInfo(Underlying).int.signedness != .signed) {
         @compileError("Underlying type must be a signed integer");
     }
 
@@ -10,7 +10,7 @@ pub fn Rational(comptime Underlying: type) type {
         den: Underlying,
         const This = @This();
 
-        const UnderlyingUnsigned = std.meta.Int(.unsigned, @typeInfo(Underlying).Int.bits);
+        const UnderlyingUnsigned = std.meta.Int(.unsigned, @typeInfo(Underlying).int.bits);
 
         pub fn init(num: Underlying, den: Underlying) This {
             std.debug.assert(den != 0);

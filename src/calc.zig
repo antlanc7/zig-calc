@@ -10,7 +10,7 @@ test "import_stack_library" {
 pub fn Calculator(comptime Number: type) type {
     return struct {
         const Self = @This();
-        const isUnderlyingRational = @typeInfo(Number) == .Struct and @typeInfo(Number).Struct.fields.len == 2 and @typeInfo(@typeInfo(Number).Struct.fields[0].type) == .Int and @typeInfo(@typeInfo(Number).Struct.fields[1].type) == .Int;
+        const isUnderlyingRational = @typeInfo(Number) == .@"struct" and @typeInfo(Number).@"struct".fields.len == 2 and @typeInfo(@typeInfo(Number).@"struct".fields[0].type) == .int and @typeInfo(@typeInfo(Number).@"struct".fields[1].type) == .int;
         const zero = if (isUnderlyingRational) Number.initFromInt(0) else 0;
         const one = if (isUnderlyingRational) Number.initFromInt(1) else 1;
         stack: Stack(Number),

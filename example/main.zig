@@ -1,6 +1,5 @@
 const std = @import("std");
-const Calculator = @import("calc.zig").Calculator;
-const Rational = @import("rational.zig").Rational(isize);
+const calc = @import("calc");
 const print = std.debug.print;
 
 pub fn main() !void {
@@ -10,7 +9,7 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var calculator = Calculator(Rational).init(allocator);
+    var calculator = calc.Calculator(calc.Rational(i64)).init(allocator);
 
     while (true) {
         print("Enter the expression to evaluate: ", .{});
