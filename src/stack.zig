@@ -7,48 +7,49 @@ pub fn Stack(comptime Child: type) type {
             data: Child,
             next: ?*Node,
         };
-        gpa: std.mem.Allocator,
-        top: ?*Node,
+        top: ?*Node = null,
 
-        pub fn init(gpa: std.mem.Allocator) This {
-            return This{
-                .gpa = gpa,
-                .top = null,
-            };
-        }
-
-        pub fn push(this: *This, value: Child) !void {
-            const node = try this.gpa.create(Node);
+        pub fn push(this: *This, allocator: std.mem.Allocator, value: Child) !void {
+            const node = try allocator.create(Node);
             node.* = .{ .data = value, .next = this.top };
             this.top = node;
         }
 
-        pub fn pop(this: *This) !Child {
+        pub fn pop(this: *This, allocator: std.mem.Allocator) !Child {
             const top = this.top orelse return error.EmptyStack;
-            defer this.gpa.destroy(top);
+            defer allocator.destroy(top);
             this.top = top.next;
             return top.data;
+        }
+
+        pub fn deinit(this: *This, allocator: std.mem.Allocator) void {
+            var node = this.top;
+            while (node) |n| {
+                node = n.next;
+                allocator.destroy(n);
+            }
         }
     };
 }
 
 test "stack" {
-    var stack = Stack(i32).init(std.testing.allocator);
+    var stack = Stack(i32){};
+    const alloc = std.testing.allocator;
 
-    try std.testing.expectError(error.EmptyStack, stack.pop());
+    try std.testing.expectError(error.EmptyStack, stack.pop(alloc));
 
-    try stack.push(25);
-    try stack.push(50);
-    try stack.push(75);
-    try stack.push(100);
+    try stack.push(alloc, 25);
+    try stack.push(alloc, 50);
+    try stack.push(alloc, 75);
+    try stack.push(alloc, 100);
 
-    try std.testing.expectEqual(stack.pop(), 100);
-    try std.testing.expectEqual(stack.pop(), 75);
-    try std.testing.expectEqual(stack.pop(), 50);
-    try std.testing.expectEqual(stack.pop(), 25);
-    try std.testing.expectError(error.EmptyStack, stack.pop());
+    try std.testing.expectEqual(stack.pop(alloc), 100);
+    try std.testing.expectEqual(stack.pop(alloc), 75);
+    try std.testing.expectEqual(stack.pop(alloc), 50);
+    try std.testing.expectEqual(stack.pop(alloc), 25);
+    try std.testing.expectError(error.EmptyStack, stack.pop(alloc));
 
-    try stack.push(1);
-    try std.testing.expectEqual(stack.pop(), 1);
-    try std.testing.expectError(error.EmptyStack, stack.pop());
+    try stack.push(alloc, 1);
+    try std.testing.expectEqual(stack.pop(alloc), 1);
+    try std.testing.expectError(error.EmptyStack, stack.pop(alloc));
 }
