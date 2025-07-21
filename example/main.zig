@@ -1,9 +1,10 @@
 const std = @import("std");
 const calc = @import("calc");
-const print = std.debug.print;
 
 pub fn main() !void {
     const stdin = std.io.getStdIn().reader();
+    const stderr = std.io.getStdErr().writer();
+    const stdout = std.io.getStdOut().writer();
 
     var dbgallocator = std.heap.DebugAllocator(.{}){};
     defer _ = dbgallocator.deinit();
@@ -12,17 +13,19 @@ pub fn main() !void {
     const calculator = calc.Calculator(calc.Rational(i64));
 
     while (true) {
-        print("Enter the expression to evaluate: ", .{});
-        const line = try stdin.readUntilDelimiterOrEofAlloc(allocator, '\n', std.math.maxInt(usize)) orelse return error.EmptyStream;
+        try stderr.print("Enter the expression to evaluate: ", .{});
+        const line = try stdin.readUntilDelimiterOrEofAlloc(allocator, '\n', std.math.maxInt(usize)) orelse return;
         defer allocator.free(line);
         const strippedLine = std.mem.trimRight(u8, line, &std.ascii.whitespace);
         if (strippedLine.len == 0) continue;
         if (std.mem.startsWith(u8, strippedLine, "exit")) break;
 
         if (calculator.eval(allocator, strippedLine)) |result| {
-            print("The result is {}\n", .{result});
+            try stderr.print("The result is ", .{});
+            try stdout.print("{}", .{result});
+            try stderr.writeByte('\n');
         } else |_| {
-            print("Invalid expression\n", .{});
+            try stderr.print("Invalid expression\n", .{});
         }
     }
 }
